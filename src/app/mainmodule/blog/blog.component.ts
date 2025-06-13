@@ -1,0 +1,169 @@
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { TestService } from 'src/app/test.service';
+import { Post, Data } from 'src/app/mainmodule/Data/datamodel';
+import { InfiniteScrollModule } from 'ngx-infinite-scroll';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import { CKEditorComponent } from '@ckeditor/ckeditor5-angular';
+
+@Component({
+  selector: 'app-blog',
+  templateUrl: './blog.component.html',
+  styleUrls: ['./blog.component.css']
+})
+export class BlogComponent implements OnInit {
+  title = '';
+  showLoginFormOnly = false;  
+  showAlertFormOnly = false;  
+  log = false;
+  result = false;
+
+  
+  alertform: FormGroup;
+  loginform: FormGroup;
+  imageBase64: string = '';
+  public Editor: any = ClassicEditor;
+
+  allPosts: Post[] = [];
+  visiblePosts: Post[] = [];
+  batchSize = 10;
+  currentIndex = 0;
+  loading = false;
+  hasMorePosts = true;
+
+  constructor(private fb: FormBuilder, private ts: TestService) {
+    this.alertform = this.fb.group({
+      name: ['', Validators.required],
+      text: ['', Validators.required],
+      image: ['']
+    });
+
+    this.loginform = this.fb.group({
+      user: ['', Validators.required],
+      pwd: ['', Validators.required]
+    });
+  }
+
+  ngOnInit() {
+    this.loadPosts(); // Initial fetch
+  }
+
+  toggleForm() {
+    this.showAlertFormOnly = true;
+    this.showLoginFormOnly = false;
+  }
+
+  closeform() {
+    this.showAlertFormOnly = false;
+    this.showLoginFormOnly = false;
+  }
+
+  login() {
+    this.log = true;
+    this.showLoginFormOnly = true;
+  }
+
+  logout() {
+    this.log = false;
+    this.result = false;
+    this.loginform.reset();
+    this.alertform.reset();
+    this.showLoginFormOnly = false;
+    this.loadPosts(); 
+  }
+
+  checkin() {
+    if (this.loginform.valid) {
+      const data: Data = {
+        user: this.loginform.value.user ?? '',
+        pwd: this.loginform.value.pwd ?? ''
+      };
+      this.ts.checkLogin(data).subscribe(res => {
+        if (res === true) {
+          this.result = true;
+          this.showLoginFormOnly = false;
+          this.loadPosts(); // Reload for logged-in view
+        } else {
+          alert("Invalid credentials");
+          this.loginform.reset();
+        }
+      });
+    }
+  }
+
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.imageBase64 = reader.result as string;
+    };
+    if (file) reader.readAsDataURL(file);
+  }
+
+  onSubmit() {
+    if (this.alertform.valid) {
+      const post: Post = {
+        name: this.alertform.value.name,
+        text: this.alertform.value.text,
+        image: this.imageBase64,
+        hide: false
+      };
+
+      this.ts.addPost(post).subscribe(res => {
+        const newPost = {
+          ...post,
+          collapsed: false,
+        };
+        this.allPosts.unshift(newPost); 
+        this.closeform();               
+        this.resetAndReloadPosts();
+      });
+    }
+  }
+
+  toggleHide(post: Post) {
+    post.hide = !post.hide;
+    this.ts.hidedata(post).subscribe(() => {
+      post.collapsed = post.hide;
+    });
+  }
+
+  loadPosts() {
+    this.ts.getPosts().subscribe(res => {
+      this.allPosts = res.map(post => ({
+        ...post,
+        collapsed: post.hide ?? false
+      }));
+      this.resetAndReloadPosts(); 
+    });
+  }
+
+  onScroll() {
+    this.loadMorePosts();
+  }
+
+  loadMorePosts() {
+    if (this.loading || !this.hasMorePosts) return;
+
+    this.loading = true;
+
+    setTimeout(() => {
+      const nextBatch = this.allPosts.slice(this.currentIndex, this.currentIndex + this.batchSize);
+
+      if (nextBatch.length === 0) {
+        this.hasMorePosts = false;
+      } else {
+        this.visiblePosts = [...this.visiblePosts, ...nextBatch];
+        this.currentIndex += this.batchSize;
+      }
+      this.loading = false;
+    }, 300); 
+  }
+
+  resetAndReloadPosts() {
+    this.currentIndex = 0;
+    this.visiblePosts = [];
+    this.hasMorePosts = true;
+    this.loadMorePosts();
+  }
+}

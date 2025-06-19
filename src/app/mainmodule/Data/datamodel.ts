@@ -5,6 +5,7 @@ export interface Post {
   time?: string;
   image?: string;
   hide?:boolean;
+  videoUrl ?:string;
   collapsed ?: boolean;
 }
 export interface Data{

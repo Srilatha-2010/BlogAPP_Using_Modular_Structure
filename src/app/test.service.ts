@@ -1,26 +1,26 @@
 import { Injectable } from '@angular/core';
-import { HttpClient , HttpParams} from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Post, Data } from './mainmodule';
-
-
+import { Messaging } from '@angular/fire/messaging';
+import { getToken, onMessage } from 'firebase/messaging';
 @Injectable({
   providedIn: 'root'
 })
 export class TestService {
   private apiUrl = 'http://localhost:5296/api/posts';
 
-  constructor(private http: HttpClient) {} 
+  constructor(
+    private http: HttpClient,private messaging: Messaging
+  ) {}
 
-
-  addPost(post: Post): Observable<Post> {
+  addPost(post: FormData): Observable<Post> {
     return this.http.post<Post>(this.apiUrl, post);
   }
 
   getPosts(): Observable<Post[]> {
     return this.http.get<Post[]>(this.apiUrl);
   }
-
 
   checkLogin(data: Data): Observable<boolean> {
     const params = new HttpParams()
@@ -29,10 +29,31 @@ export class TestService {
     return this.http.get<boolean>(`${this.apiUrl}/login`, { params });
   }
 
+  hidedata(post: Post): Observable<any> {
+    return this.http.put(`${this.apiUrl}/hide`, post);
+  }
+  requestPermission() {
+    getToken(this.messaging, {
+      vapidKey: 'BHUOfGcXAB8yGeuDSJgQUsrjp64Xp-GN5F7JXYG9dNFad2Ecl5Pr2LDcrDmJsbU57QZ_MwL6KHTwpVn5F8IoCRY' 
+    }).then((token) => {
+      console.log('FCM Token:', token);
+     
+    }).catch((err) => {
+      console.error('Error getting token:', err);
+    });
+  }
 
- hidedata(post: Post): Observable<any> {
-  return this.http.put(`${this.apiUrl}/hide`, post); 
+  listenForMessages() {
+  onMessage(this.messaging, (payload) => {
+    console.log('Message received: ', payload);
+    const title = payload.notification?.title || 'New Message';
+    const body = payload.notification?.body || '';
+    this.shownotify(title, body);
+  });
 }
-
-
+  shownotify(title:string,body:string):void {
+    if(Notification.permission==='granted') {
+      new Notification(title,{body});
+    }
+  }
 }

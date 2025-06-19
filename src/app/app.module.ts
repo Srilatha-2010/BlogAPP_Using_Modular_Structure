@@ -2,10 +2,12 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { MainmoduleModule } from './mainmodule';
+import { MainmoduleModule } from './mainmodule/mainmodule.module'; 
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
-
-
+import { HttpClientModule } from '@angular/common/http';
+import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
+import { provideMessaging, getMessaging } from '@angular/fire/messaging';
+import { environment } from 'src/environment';
 
 @NgModule({
   declarations: [
@@ -15,7 +17,10 @@ import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
     BrowserModule,
     AppRoutingModule,
     MainmoduleModule,
-   CKEditorModule
+    CKEditorModule,
+    HttpClientModule,
+    provideFirebaseApp(() => initializeApp(environment.firebase)),
+    provideMessaging(() => getMessaging())
   ],
   providers: [],
   bootstrap: [AppComponent]

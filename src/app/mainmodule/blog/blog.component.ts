@@ -22,6 +22,9 @@ export class BlogComponent implements OnInit {
   alertform: FormGroup;
   loginform: FormGroup;
   imageBase64: string = '';
+  VideoFile !: File;
+  selectedVideoFile ?:File;
+  videoPreviewUrl ?: string;
   public Editor: any = ClassicEditor;
 
   allPosts: Post[] = [];
@@ -35,7 +38,8 @@ export class BlogComponent implements OnInit {
     this.alertform = this.fb.group({
       name: ['', Validators.required],
       text: ['', Validators.required],
-      image: ['']
+      image: [''],
+      video1:['']
     });
 
     this.loginform = this.fb.group({
@@ -45,7 +49,9 @@ export class BlogComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.loadPosts(); // Initial fetch
+    this.loadPosts(); 
+    this.ts.requestPermission();
+    this.ts.listenForMessages();
   }
 
   toggleForm() {
@@ -82,17 +88,19 @@ export class BlogComponent implements OnInit {
         if (res === true) {
           this.result = true;
           this.showLoginFormOnly = false;
-          this.loadPosts(); // Reload for logged-in view
+          this.loadPosts(); 
         } else {
           alert("Invalid credentials");
           this.loginform.reset();
         }
       });
     }
+       this.ts.shownotify('Login','Login Successful')
   }
 
   onFileSelected(event: any) {
     const file = event.target.files[0];
+    console.log(event.target.files[0]);
     const reader = new FileReader();
     reader.onload = () => {
       this.imageBase64 = reader.result as string;
@@ -100,26 +108,46 @@ export class BlogComponent implements OnInit {
     if (file) reader.readAsDataURL(file);
   }
 
+  onVideoSelected(event: any) {
+  const file = event.target.files[0];
+  if (file) {
+    this.videoPreviewUrl = URL.createObjectURL(file);
+    this.VideoFile = file;
+    this.alertform.patchValue({ video1: file.name });
+  }
+  }
   onSubmit() {
-    if (this.alertform.valid) {
-      const post: Post = {
+  if (this.alertform.valid) {
+    const formData = new FormData();
+    formData.append('name', this.alertform.value.name);
+    formData.append('text', this.alertform.value.text);
+    formData.append('hide', 'false');
+
+    if (this.imageBase64) {
+      formData.append('image', this.imageBase64); 
+    }
+
+    if (this.VideoFile) {
+      formData.append('videoFile', this.VideoFile);
+    }
+
+    this.ts.addPost(formData).subscribe(res => {
+      const newPost = {
         name: this.alertform.value.name,
         text: this.alertform.value.text,
-        image: this.imageBase64,
-        hide: false
+        image: this.imageBase64, 
+        video: this.VideoFile?.name,
+        collapsed: false
       };
+      this.allPosts.unshift(newPost);
+      this.closeform();
+      this.resetAndReloadPosts();
+    });
 
-      this.ts.addPost(post).subscribe(res => {
-        const newPost = {
-          ...post,
-          collapsed: false,
-        };
-        this.allPosts.unshift(newPost); 
-        this.closeform();               
-        this.resetAndReloadPosts();
-      });
-    }
+    this.ts.shownotify('New Post', 'Posted Successfully.......');
+    this.ts.requestPermission();
   }
+}
 
   toggleHide(post: Post) {
     post.hide = !post.hide;
@@ -133,7 +161,9 @@ export class BlogComponent implements OnInit {
       this.allPosts = res.map(post => ({
         ...post,
         collapsed: post.hide ?? false
+        
       }));
+      //console.log('API Response:', res[0]);
       this.resetAndReloadPosts(); 
     });
   }
@@ -149,7 +179,6 @@ export class BlogComponent implements OnInit {
 
     setTimeout(() => {
       const nextBatch = this.allPosts.slice(this.currentIndex, this.currentIndex + this.batchSize);
-
       if (nextBatch.length === 0) {
         this.hasMorePosts = false;
       } else {
@@ -159,7 +188,6 @@ export class BlogComponent implements OnInit {
       this.loading = false;
     }, 300); 
   }
-
   resetAndReloadPosts() {
     this.currentIndex = 0;
     this.visiblePosts = [];

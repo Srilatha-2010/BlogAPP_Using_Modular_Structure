@@ -17,12 +17,13 @@ export class BlogComponent implements OnInit {
   showAlertFormOnly = false;  
   log = false;
   result = false;
-
-  
   alertform: FormGroup;
   loginform: FormGroup;
-  imageBase64: string = '';
+  imageBase64: string='';
+  selectedImages!: File;
   VideoFile !: File;
+  search=new FormControl();
+ 
   selectedVideoFile ?:File;
   videoPreviewUrl ?: string;
   public Editor: any = ClassicEditor;
@@ -33,12 +34,12 @@ export class BlogComponent implements OnInit {
   currentIndex = 0;
   loading = false;
   hasMorePosts = true;
-
+  
   constructor(private fb: FormBuilder, private ts: TestService) {
     this.alertform = this.fb.group({
       name: ['', Validators.required],
       text: ['', Validators.required],
-      image: [''],
+      image: '',
       video1:['']
     });
 
@@ -46,6 +47,7 @@ export class BlogComponent implements OnInit {
       user: ['', Validators.required],
       pwd: ['', Validators.required]
     });
+    
   }
 
   ngOnInit() {
@@ -65,6 +67,7 @@ export class BlogComponent implements OnInit {
   }
 
   login() {
+    this.closeform();
     this.log = true;
     this.showLoginFormOnly = true;
   }
@@ -97,16 +100,25 @@ export class BlogComponent implements OnInit {
     }
        this.ts.shownotify('Login','Login Successful')
   }
+searchMode = false;
 
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    console.log(event.target.files[0]);
+
+
+onFileSelected(event: any): void {
+  const file: File = event.target.files[0];
+
+  if (file) {
+    this.selectedImages = file;  
+
     const reader = new FileReader();
     reader.onload = () => {
-      this.imageBase64 = reader.result as string;
+      this.imageBase64 = reader.result as string; 
     };
-    if (file) reader.readAsDataURL(file);
+    reader.readAsDataURL(file);
   }
+}
+
+
 
   onVideoSelected(event: any) {
   const file = event.target.files[0];
@@ -122,9 +134,9 @@ export class BlogComponent implements OnInit {
     formData.append('name', this.alertform.value.name);
     formData.append('text', this.alertform.value.text);
     formData.append('hide', 'false');
-
-    if (this.imageBase64) {
-      formData.append('image', this.imageBase64); 
+   if (this.selectedImages) {
+      formData.append('Images', this.selectedImages.name);      
+      formData.append('ImageFile', this.selectedImages);       
     }
 
     if (this.VideoFile) {
@@ -132,16 +144,17 @@ export class BlogComponent implements OnInit {
     }
 
     this.ts.addPost(formData).subscribe(res => {
-      const newPost = {
-        name: this.alertform.value.name,
-        text: this.alertform.value.text,
-        image: this.imageBase64, 
-        video: this.VideoFile?.name,
-        collapsed: false
-      };
+      const newPost: Post = {
+            name: this.alertform.value.name,
+            text: this.alertform.value.text,
+            image: this.alertform.value.image, 
+            videoUrl: this.VideoFile?.name ?? '',
+            collapsed: false
+          };
       this.allPosts.unshift(newPost);
       this.closeform();
       this.resetAndReloadPosts();
+      this.loadPosts();
     });
 
     this.ts.shownotify('New Post', 'Posted Successfully.......');
@@ -162,8 +175,9 @@ export class BlogComponent implements OnInit {
         ...post,
         collapsed: post.hide ?? false
         
+        
       }));
-      //console.log('API Response:', res[0]);
+      console.log('Fetched Posts:', res[0])
       this.resetAndReloadPosts(); 
     });
   }

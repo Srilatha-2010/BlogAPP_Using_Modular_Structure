@@ -1,68 +1,96 @@
 <div class="container mt-4">
   <h2 class="text-center">Blogging App</h2><br>
 
+  <!-- Login/Logout -->
   <div class="text-end">
     <button (click)="login()" *ngIf="!log" class="btn btn-primary m-3">Login</button>
     <button (click)="logout()" *ngIf="log" class="btn btn-primary m-3">Logout</button>
   </div>
 
+  <!-- 
+  <div class="form-group mb-3">
+    <input [formControl]="search" placeholder="Search by name..." class="form-control" />
+    <div class="mt-2">
+      <button class="btn btn-primary" (click)="onSearching()">Search</button>
+      <button *ngIf="searchMode" class="btn btn-secondary ms-2" (click)="clearSearch()">Clear</button>
+    </div>
+  </div>
+-->
+  <!-- Post Form -->
   <div class="text-center" *ngIf="!showAlertFormOnly && !log && !result">
     <button (click)="toggleForm()" class="btn btn-primary">Add Your's</button>
-   </div><br><br>
-   <div class="card" *ngIf="showAlertFormOnly">
-   <form [formGroup]="alertform" (ngSubmit)="onSubmit()">
-    <div class="form-group">
-      <label>Name:</label><br>
-      <input formControlName="name" placeholder="Your Name">
-    </div>
-    <div class="form-group">
-      <label>Memories</label>
-      <ckeditor [editor]="Editor" class="form-control" formControlName="text"></ckeditor>
-    </div>
-    <div class="form-group">
-      <label>Upload Image</label>
-      <input type="file" (change)="onFileSelected($event)" accept="image/*">
-    </div><br>
-    <div class="form-group">
-      <label>Upload Video File</label>
-      <input type="file" (change)="onVideoSelected($event)" accept="video/*">
-      <video *ngIf="videoPreviewUrl" controls width="400">
-       <source [src]="videoPreviewUrl" type="video/mp4" />
-            Your browser does not support the video tag.
-       </video>
-    </div>
-    <button (click)="closeform()" class="btn btn-danger m-3">Close</button>
-    <button type="submit" class="btn btn-success m-2" [disabled]="alertform.invalid">Post</button>
-  </form>
-   </div><br><br>
-  <form [formGroup]="loginform" *ngIf="log && !result" (ngSubmit)="checkin()" class="card container text-start">
-    <div class="card-title text-center mt-2">Login Form</div>
-    <div class="form-group ms-5">
-      <label>User:</label><br>
-      <input formControlName="user" placeholder="Please enter user name">
-      <div *ngIf="loginform.controls['user'].invalid && loginform.controls['user'].touched">
-        <span class="text-danger">User name required</span>
+  </div><br>
+  <button class="btn btn-primary mb-3" routerLink='chat'>Chat</button>
+
+  <div *ngIf="showAlertFormOnly">
+    <form [formGroup]="alertform" (ngSubmit)="onSubmit()">
+      <div class="card">
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label">Name:</label>
+            <input class="form-control" formControlName="name" placeholder="Your Name">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Memories:</label>
+            <ckeditor [editor]="Editor" formControlName="text" class="form-control"></ckeditor>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Upload Images:</label>
+                   <input type="file" class="form-control" (change)="onFileSelected($event)" />
+                         <img *ngIf="imageBase64" [src]="imageBase64" width="150" />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Upload Video:</label>
+            <input class="form-control" type="file" (change)="onVideoSelected($event)" accept="video/*">
+            <video *ngIf="videoPreviewUrl" controls width="400" class="mt-2">
+              <source [src]="videoPreviewUrl" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+
+          <div class="text-end">
+            <button type="button" class="btn btn-danger me-2" (click)="closeform()">Close</button>
+            <button type="submit" class="btn btn-success" [disabled]="alertform.invalid">Post</button>
+          </div>
+        </div>
       </div>
-    </div><br>
-    <div class="form-group ms-5">
-      <label>Password:</label><br>
-      <input type="password" formControlName="pwd" placeholder="Please enter your password">
-      <div *ngIf="loginform.controls['pwd'].invalid && loginform.controls['pwd'].touched">
-        <span class="text-danger">Password required</span>
-      </div><br><br>
-      <button class="btn btn-success text-center ms-6" [disabled]="loginform.invalid">Checkin</button><br><br>
+    </form>
+  </div>
+
+  <!-- Login Form -->
+  <form [formGroup]="loginform" *ngIf="log && !result" (ngSubmit)="checkin()" class="card mt-4">
+    <div class="card-body">
+      <h3 class="card-title text-center">Login Form</h3>
+      <div class="mb-3">
+        <label>User:</label>
+        <input class="form-control" formControlName="user" placeholder="Please enter user name">
+        <div *ngIf="loginform.controls['user'].invalid && loginform.controls['user'].touched" class="text-danger">User name required</div>
+      </div>
+      <div class="mb-3">
+        <label>Password:</label>
+        <input type="password" class="form-control" formControlName="pwd" placeholder="Please enter your password">
+        <div *ngIf="loginform.controls['pwd'].invalid && loginform.controls['pwd'].touched" class="text-danger">Password required</div>
+      </div>
+      <div class="text-center">
+        <button class="btn btn-success" [disabled]="loginform.invalid">Checkin</button>
+      </div>
     </div>
   </form>
 
+  <!-- Login Info -->
   <p class="alert alert-info" *ngIf="result">{{ loginform.value.user }} Logged In</p>
- 
+
+  <!-- Display Posts (Search or Infinite Scroll) -->
   <div
-  infiniteScroll
-  [infiniteScrollDistance]="2"
-  [infiniteScrollThrottle]="100"
-  (scrolled)="onScroll()">
-  <div *ngIf="!showLoginFormOnly">
-    <div *ngFor="let post of visiblePosts" class="card mb-3">
+    infiniteScroll
+    [infiniteScrollDistance]="2"
+    [infiniteScrollThrottle]="100"
+    (scrolled)="onScroll()">
+
+    <div *ngFor="let post of  visiblePosts" class="card mb-3">
       <div class="card-body row">
         <h5 class="card-title col-md-10">User: {{ post.name }}</h5>
         <ng-container *ngIf="log && result">
@@ -70,34 +98,35 @@
             {{ post.collapsed ? 'View' : 'Hide' }}
           </button>
         </ng-container>
-        <div
-          *ngIf="(log && result && !post.collapsed) || (!log && !post.hide)"
-          class="col-12 mt-3">
-          <p class="text-muted text-end"><b>{{ post.time | date: 'dd-MM-yyyy | hh:mm:ss-a' }}</b></p>
+
+        <div *ngIf="(log && result && !post.collapsed) || (!log && !post.hide)" class="col-12 mt-3">
+          <p class="text-muted text-end"><b>{{ post.time | date: 'dd-MM-yyyy | hh:mm:ss a' }}</b></p>
           <h5>Caption:</h5>
-          <p class="card-text" [innerHTML]="post.text"></p>
-          <img *ngIf="post.image" [src]="post.image" class="img-fluid" width="200" /><br><br>
-         <h6>Video:-</h6>
-         <video *ngIf="post.videoUrl" width="400" height="300" controls>
-           <source [src]="post.videoUrl" type="video/mp4">
-              Your browser does not support the video tag.
-             </video>
+          <p [innerHTML]="post.text"></p>
+         <div *ngIf="post.image">
+          <h6>Image:</h6>
+          <img [src]="'http://localhost:5296/images/' + post.image" width="200" />
         </div>
-    </div>
-  
+          <div *ngIf="post.videoUrl">
+            <h6>Video:</h6>
+            <video width="400" height="300" controls>
+              <source [src]="post.videoUrl" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+
         <div *ngIf="!log && post.hide">
           <h6 class="text-muted ms-4">This post is hidden</h6>
         </div>
       </div>
     </div>
 
- 
-  <div *ngIf="loading" class="text-center my-2">
+    <div *ngIf="loading" class="text-center my-2">
       <span class="spinner-border spinner-border-sm"></span> Loading more...
     </div>
     <div *ngIf="!hasMorePosts && !loading" class="text-center text-muted my-2">
       No more posts to load.
     </div>
   </div>
-  </div>
- 
+</div>

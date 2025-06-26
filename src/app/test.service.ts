@@ -56,4 +56,8 @@ export class TestService {
       new Notification(title,{body});
     }
   }
+  searching(post: Post): Observable<any> {
+  return this.http.post(`${this.apiUrl}/search`, post);
+}
+
 }

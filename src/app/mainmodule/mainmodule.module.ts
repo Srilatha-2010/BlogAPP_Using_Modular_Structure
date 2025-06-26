@@ -5,16 +5,18 @@ import { HttpClientModule } from '@angular/common/http';
 import { ReactiveFormsModule } from '@angular/forms';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
+import { ChatComponent } from './chat/chat.component';
+import { RouterModule } from '@angular/router';
 
 
 @NgModule({
-  declarations: [BlogComponent],
+  declarations: [BlogComponent, ChatComponent],
   imports: [
     CommonModule,
     HttpClientModule,
     ReactiveFormsModule,
     InfiniteScrollModule,
-    CKEditorModule,
+    CKEditorModule,RouterModule
   ],
   exports: [BlogComponent]
 })

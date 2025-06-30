@@ -32,7 +32,12 @@
         <h6 class="card-title ms-4 mt-2">Live Chat:</h6>
         <div #scrollMe class="card-body" style="max-height: 400px; overflow-y: auto;">
             <div class="border rounded p-2 mb-1 bg-light" *ngFor="let msg of messages">
-              <strong>{{ msg.user }}:</strong> {{ msg.message }}
+              <div *ngIf="user == msg.user">
+              <strong >you: {{ msg.message }}</strong>
+              </div>
+              <div *ngIf="user != msg.user">
+              <strong>{{msg.user}} :{{ msg.message }}</strong>
+              </div>
             </div>
     </div>
     </div>

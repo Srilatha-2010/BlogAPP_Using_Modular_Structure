@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, numberAttribute, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { TestService } from 'src/app/test.service';
 import { Post, Data } from 'src/app/mainmodule/Data/datamodel';
@@ -34,7 +34,11 @@ export class BlogComponent implements OnInit {
   currentIndex = 0;
   loading = false;
   hasMorePosts = true;
+  chatopen=false;
   
+  inout=false;
+
+
   constructor(private fb: FormBuilder, private ts: TestService) {
     this.alertform = this.fb.group({
       name: ['', Validators.required],
@@ -47,9 +51,8 @@ export class BlogComponent implements OnInit {
       user: ['', Validators.required],
       pwd: ['', Validators.required]
     });
-    
   }
-
+  username:string='';
   ngOnInit() {
     this.loadPosts(); 
     this.ts.requestPermission();
@@ -68,17 +71,23 @@ export class BlogComponent implements OnInit {
 
   login() {
     this.closeform();
-    this.log = true;
+    this.inout=false;
+    this.log=true;
     this.showLoginFormOnly = true;
+  }
+  closelogin(){
+    this.log=false;
+    this.showLoginFormOnly = false;
+    this.inout=true;
   }
 
   logout() {
-    this.log = false;
     this.result = false;
     this.loginform.reset();
-    this.alertform.reset();
-    this.showLoginFormOnly = false;
-    this.loadPosts(); 
+    this.showLoginFormOnly = true;
+    this.inout=true;
+    this.chatopen=false;
+
   }
 
   checkin() {
@@ -99,10 +108,11 @@ export class BlogComponent implements OnInit {
       });
     }
        this.ts.shownotify('Login','Login Successful')
+       this.chatopen=true;
+      const username = this.loginform.value.user; //user name 
+      this.ts.setuser(username); // setuser calling
   }
 searchMode = false;
-
-
 
 onFileSelected(event: any): void {
   const file: File = event.target.files[0];
@@ -117,8 +127,6 @@ onFileSelected(event: any): void {
     reader.readAsDataURL(file);
   }
 }
-
-
 
   onVideoSelected(event: any) {
   const file = event.target.files[0];
@@ -163,11 +171,13 @@ onFileSelected(event: any): void {
 }
 
   toggleHide(post: Post) {
-    post.hide = !post.hide;
-    this.ts.hidedata(post).subscribe(() => {
-      post.collapsed = post.hide;
-    });
-  }
+  post.hide = !post.hide;
+  this.ts.hidedata({ id: post.id!, hide: post.hide }).subscribe(() => {
+    post.collapsed = post.hide;
+    console.log('Hide updated for post:', post.id);
+  });
+}
+
 
   loadPosts() {
     this.ts.getPosts().subscribe(res => {
@@ -175,9 +185,8 @@ onFileSelected(event: any): void {
         ...post,
         collapsed: post.hide ?? false
         
-        
       }));
-      console.log('Fetched Posts:', res[0])
+      //console.log('Fetched Posts:', res[0])
       this.resetAndReloadPosts(); 
     });
   }
@@ -208,4 +217,37 @@ onFileSelected(event: any): void {
     this.hasMorePosts = true;
     this.loadMorePosts();
   }
+onSearching() {
+  const name = this.search.value?.trim();
+  if (!name) return;
+
+  this.searchMode = true;
+
+  const post: Post = {
+    //id:0,
+    name: name,
+    text: '',           
+    image: '',          
+    videoUrl: '',        
+    hide: false           
+  };
+
+  this.ts.searchPosts(post).subscribe({
+    next: (results: Post[]) => {
+      this.allPosts = results.map(post => ({
+        ...post,
+        collapsed: post.hide ?? false
+      }));
+      this.resetAndReloadPosts();
+    },
+    error: err => {
+      console.error('Search error:', err.message);
+    }
+  });
+}
+clearSearch() {
+  this.search.reset();
+  this.searchMode = false;
+  this.loadPosts(); 
+}
 }

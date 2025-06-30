@@ -9,6 +9,7 @@ import { getToken, onMessage } from 'firebase/messaging';
 })
 export class TestService {
   private apiUrl = 'http://localhost:5296/api/posts';
+  private username: string = '';
 
   constructor(
     private http: HttpClient,private messaging: Messaging
@@ -28,10 +29,23 @@ export class TestService {
       .set('password', data.pwd);
     return this.http.get<boolean>(`${this.apiUrl}/login`, { params });
   }
+    setuser(name:string){  // callig at blogcomponent
+      return this.username=name
+    } 
 
-  hidedata(post: Post): Observable<any> {
-    return this.http.put(`${this.apiUrl}/hide`, post);
-  }
+    getusername(){
+      return this.username // calling at personal component
+    }
+
+    // all the users except him/her
+    loginUser(username: string): Observable<Data[]> {
+      const params = new HttpParams().set('username', username);
+      return this.http.get<Data[]>(`${this.apiUrl}/users`, { params });
+    }
+
+    hidedata(data: { id: number, hide: boolean }) {
+      return this.http.put('http://localhost:5296/api/posts/hide', data);
+    }
   requestPermission() {
     getToken(this.messaging, {
       vapidKey: 'BHUOfGcXAB8yGeuDSJgQUsrjp64Xp-GN5F7JXYG9dNFad2Ecl5Pr2LDcrDmJsbU57QZ_MwL6KHTwpVn5F8IoCRY' 
@@ -56,8 +70,9 @@ export class TestService {
       new Notification(title,{body});
     }
   }
-  searching(post: Post): Observable<any> {
-  return this.http.post(`${this.apiUrl}/search`, post);
+searchPosts(post: Post): Observable<Post[]> {
+  return this.http.post<Post[]>(`${this.apiUrl}/search`, post);
 }
+
 
 }

@@ -1,30 +1,50 @@
 <div class="container mt-4">
-  <h2 class="text-center">Blogging App</h2><br>
+  <h2 class="text-center mb-3" *ngIf="!showAlertFormOnly && !log">Blogging App</h2>
 
-  <!-- Login/Logout -->
-  <div class="text-end">
-    <button (click)="login()" *ngIf="!log" class="btn btn-primary m-3">Login</button>
-    <button (click)="logout()" *ngIf="log" class="btn btn-primary m-3">Logout</button>
-  </div>
+  <div class="row g-2 align-items-center mb-3">
+    <!-- Chat Button -->
+    <div class="col-6 col-md-2" *ngIf="!showAlertFormOnly">
+    <button class="btn btn-primary w-100" [routerLink]="chatopen ? 'Pchat' : 'chat'">
+         {{ chatopen ? 'Chat' : 'Live Chat' }}
+    </button>
 
-  <!-- 
-  <div class="form-group mb-3">
-    <input [formControl]="search" placeholder="Search by name..." class="form-control" />
-    <div class="mt-2">
-      <button class="btn btn-primary" (click)="onSearching()">Search</button>
-      <button *ngIf="searchMode" class="btn btn-secondary ms-2" (click)="clearSearch()">Clear</button>
+    </div>
+
+    <!-- Add Your's Button -->
+    <div class="col-6 col-md-2 text-center" *ngIf="!showAlertFormOnly && !log && !result">
+      <button (click)="toggleForm()" class="btn btn-success w-100">Add Your's</button>
+    </div>
+
+    <!-- Search Input -->
+    <div class="col-12 col-md-4" *ngIf="(!showAlertFormOnly && !log) || chatopen">
+      <input [formControl]="search" placeholder="Search by name..." class="form-control" />
+    </div>
+
+    <!-- Search Button -->
+    <div class="col-6 col-md-2" *ngIf="(!showAlertFormOnly && !log) || chatopen">
+      <button class="btn btn-primary w-100" (click)="onSearching()">Search</button>
+    </div>
+
+    <!-- Clear Button -->
+    <div class="col-6 col-md-2" *ngIf="searchMode">
+      <button class="btn btn-secondary w-100" (click)="clearSearch()">Clear</button>
+    </div>
+
+    <!-- Login / Logout Buttons -->
+    <div class="col-12 text-end">
+      <button (click)="login()" *ngIf="!log && !showAlertFormOnly" class="btn btn-outline-primary m-2">Login</button>
+      <button (click)="closelogin()" *ngIf="showLoginFormOnly" class="btn btn-outline-primary m-2">close</button>
+      <button (click)="logout()" *ngIf="chatopen && !showLoginFormOnly && log" class="btn btn-outline-danger m-2">Logout</button>
     </div>
   </div>
--->
   <!-- Post Form -->
-  <div class="text-center" *ngIf="!showAlertFormOnly && !log && !result">
-    <button (click)="toggleForm()" class="btn btn-primary">Add Your's</button>
-  </div><br>
-  <button class="btn btn-primary mb-3" routerLink='chat'>Chat</button>
 
-  <div *ngIf="showAlertFormOnly">
+
+
+  <div *ngIf="showAlertFormOnly" class="mb-3">
     <form [formGroup]="alertform" (ngSubmit)="onSubmit()">
       <div class="card">
+        <strong class="text-center mt-3 ">Your Detail's</strong>
         <div class="card-body">
           <div class="mb-3">
             <label class="form-label">Name:</label>
@@ -61,7 +81,7 @@
   </div>
 
   <!-- Login Form -->
-  <form [formGroup]="loginform" *ngIf="log && !result" (ngSubmit)="checkin()" class="card mt-4">
+  <form [formGroup]="loginform" *ngIf="log && !result" (ngSubmit)="checkin()" class="card mt-4 mb-4">
     <div class="card-body">
       <h3 class="card-title text-center">Login Form</h3>
       <div class="mb-3">
@@ -84,13 +104,13 @@
   <p class="alert alert-info" *ngIf="result">{{ loginform.value.user }} Logged In</p>
 
   <!-- Display Posts (Search or Infinite Scroll) -->
-  <div
+  <div *ngIf="!showLoginFormOnly"
     infiniteScroll
     [infiniteScrollDistance]="2"
     [infiniteScrollThrottle]="100"
     (scrolled)="onScroll()">
 
-    <div *ngFor="let post of  visiblePosts" class="card mb-3">
+    <div *ngFor="let post of  visiblePosts" class="card mb-2">
       <div class="card-body row">
         <h5 class="card-title col-md-10">User: {{ post.name }}</h5>
         <ng-container *ngIf="log && result">
@@ -105,11 +125,11 @@
           <p [innerHTML]="post.text"></p>
          <div *ngIf="post.image">
           <h6>Image:</h6>
-          <img [src]="'http://localhost:5296/images/' + post.image" width="200" />
+          <img [src]="'http://localhost:5296/images/' + post.image" width="100" height="100" />
         </div>
           <div *ngIf="post.videoUrl">
-            <h6>Video:</h6>
-            <video width="400" height="300" controls>
+            <h6 class="mt-2">Video:</h6>
+            <video width="200" height="200" controls>
               <source [src]="post.videoUrl" type="video/mp4">
               Your browser does not support the video tag.
             </video>
@@ -117,7 +137,7 @@
         </div>
 
         <div *ngIf="!log && post.hide">
-          <h6 class="text-muted ms-4">This post is hidden</h6>
+          <h6 class="text-muted ms-4  mt-2">This post is hidden</h6>
         </div>
       </div>
     </div>

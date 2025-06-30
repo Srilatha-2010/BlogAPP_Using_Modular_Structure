@@ -1,0 +1,66 @@
+<div class="container-fluid" *ngIf="!name">
+    <h5 class="mb-3 mt-2 text-center">All Contacts</h5>
+      <div *ngIf="data?.length > 0; else noUsers">
+        <div *ngFor="let data1 of data; let i = index">
+          <button
+            class="btn mb-2 w-100"
+            [ngClass]="selectedIndex === i ? 'btn-success' : 'btn-primary'"
+            [value]="data1.user"
+            (click)="buttonClick(i, $event)">
+            {{ data1.user }}
+          </button>
+        </div>
+      </div>
+   <ng-template #noUsers>
+      <p>No users found.</p>
+    </ng-template>
+  </div>
+
+
+ <div class="container-fluid min-vh-100 d-flex flex-column" *ngIf="name">
+    <div class="flex-grow-1 overflow-auto bg-light mt-3">
+     <div class="row align-items-center mt-3">
+        <div class="col-2 ms-2" (click)="contacts()"><mat-icon>contacts</mat-icon></div>
+          <div class="col-8 text-center">
+            <h4>Chat with {{name}}</h4><hr>
+          </div>
+        
+      </div>
+
+    </div>
+      <!-- Your chat messages go here -->
+
+
+    <!-- Message input area at the bottom -->
+    <div class="row g-2 align-items-center mt-auto p-2 border-top">
+      <div class="col-10">
+        <input formControlName="message" class="form-control" placeholder="Type your message..." />
+      </div>
+      <div class="col-2">
+        <button class="btn btn-success w-100">Send</button>
+      </div>
+    </div>
+ </div>
+  <!--
+    <div class="col-7 d-flex flex-column justify-content-between py-3" *ngIf="app">
+ 
+      <div>
+        <h5 class="text-center">Hello {{ name }}</h5>
+
+      </div>
+
+     
+      <div class="mt-auto">
+        <div class="row g-2 align-items-center">
+          <div class="col-10">
+            <input formControlName="message" class="form-control" placeholder="Type your message..." />
+          </div>
+          <div class="col-2">
+            <button class="btn btn-success w-100">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+-->

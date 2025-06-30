@@ -1,6 +1,8 @@
 import { Component, OnInit ,ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import * as signalR from '@microsoft/signalr';
+import { BlogComponent } from '../blog/blog.component';
+import { PersonalchatComponent } from '../personalchat/personalchat.component';
 
 @Component({
   selector: 'app-chat',
@@ -13,7 +15,6 @@ export class ChatComponent implements OnInit {
   messages: { user: string; message: string }[] = [];
   joined = false;
   user = '';
-
   constructor(private fb: FormBuilder) {
     this.form = this.fb.group({
       user: [''],
@@ -36,7 +37,7 @@ export class ChatComponent implements OnInit {
         user: msg.user,
         message: msg.message
       }));
-    });
+  });
 
     this.connection.start().catch(console.error);
   }

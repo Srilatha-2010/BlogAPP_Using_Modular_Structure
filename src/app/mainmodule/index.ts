@@ -1,3 +1,5 @@
 export * from './Data/datamodel'
 export * from './blog/blog.component'
 export * from './mainmodule.module'
+export * from './chat/chat.component'
+export * from './personalchat/personalchat.component'

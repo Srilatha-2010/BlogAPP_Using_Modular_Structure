@@ -7,16 +7,17 @@ import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import { ChatComponent } from './chat/chat.component';
 import { RouterModule } from '@angular/router';
-
+import { PersonalchatComponent } from './personalchat/personalchat.component';
+import { MatIconModule } from '@angular/material/icon';
 
 @NgModule({
-  declarations: [BlogComponent, ChatComponent],
+  declarations: [BlogComponent, ChatComponent, PersonalchatComponent],
   imports: [
     CommonModule,
     HttpClientModule,
     ReactiveFormsModule,
     InfiniteScrollModule,
-    CKEditorModule,RouterModule
+    CKEditorModule,RouterModule,MatIconModule
   ],
   exports: [BlogComponent]
 })
